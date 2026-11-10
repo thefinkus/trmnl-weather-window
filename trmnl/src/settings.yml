@@ -1,0 +1,47 @@
+---
+name: Weather Window
+description: Weather forecast as a film still
+strategy: polling
+polling_verb: get
+polling_url: 'https://api.open-meteo.com/v1/forecast?latitude={{ trmnl.plugin_settings.custom_fields_values.latitude | default: "48.137" }}&longitude={{ trmnl.plugin_settings.custom_fields_values.longitude | default: "11.575" }}&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,precipitation,weather_code,cloud_cover,wind_gusts_10m,visibility,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&forecast_days=3&timezone=auto'
+refresh_interval: 60
+dark_mode: 'no'
+no_screen_padding: 'no'
+custom_fields:
+  - keyname: about
+    name: About this plugin
+    field_type: author_bio
+    category: environment,art
+    description: >-
+      The weather as a film still: one real photograph that fits the next few hours, and two subtitle lines. The first says what matters next ("Rain until 13:00, then sun."), the second is a small remark that fits it ("Put the kettle on."). Top left: your place, the day, high and low. Top right: tomorrow. No clock and no dashboard, so the screen is still true when you look at it an hour later.<br/>Setup: type the name you want to see, and the latitude and longitude of your place (right-click a spot in any map app to copy them). Choose Celsius or Fahrenheit and the clock style.<br/>Photographs: Unsplash, credits in the repository. Forecast: Open-Meteo. Type: Fraunces.<br/>Made by thefinkus
+    github_url: https://github.com/thefinkus/trmnl-weather-window
+    learn_more_url: https://open-meteo.com
+  - keyname: place
+    name: Place name
+    field_type: string
+    default: Munich
+    description: Shown in the top left corner. Any name you like.
+  - keyname: latitude
+    name: Latitude
+    field_type: string
+    default: '48.137'
+    description: Decimal degrees, north is positive. Example 48.137 for Munich.
+  - keyname: longitude
+    name: Longitude
+    field_type: string
+    default: '11.575'
+    description: Decimal degrees, east is positive. Example 11.575 for Munich, -73.98 for New York.
+  - keyname: units
+    name: Units
+    field_type: select
+    options:
+      - 'Celsius and km/h': c
+      - 'Fahrenheit and mph': f
+    default: c
+  - keyname: clock
+    name: Clock
+    field_type: select
+    options:
+      - '24 hours (13:00)': '24'
+      - '12 hours (1 pm)': '12'
+    default: '24'

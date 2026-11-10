@@ -22,17 +22,17 @@ var WW_BASE = "https://cdn.jsdelivr.net/gh/thefinkus/trmnl-weather-window@b23b2b
 var STILLS = {"clear":["1558215664-756693fa4a82","1588421357538-7c22591e4f90","1590077428593-a55bb07c4665","1518717202715-9fa9d099f58a"],"partly":["1525490829609-d166ddb58678","1591010746236-f0fa10edf051","1596627546982-d62c02c55b00","1563705330026-7b2d352069c3"],"overcast":["1770748723990-f969ba4b5f9d","1778846276877-643cc8fa66e8","1770571179652-c517185a0c9e","1653773526974-6dc0e45a89fc"],"drizzle":["1433863448220-78aaa064ff47","1489781879256-fa824b56f24f","1611738740585-3598e06e0f8c","1623979804482-5a0605157262"],"rain":["1428592953211-077101b2021b","1692362385851-cf68a6d9604b","1542273917363-3b1817f69a2d","1460751329354-07d91b47af38"],"downpour":["1501999635878-71cb5379c2d8","1622987857832-a31ceda6ad0d","1640600997533-1b44078d394b","1716913897161-d22267f4a4b6"],"showers":["1608012808044-704827b6cf12","1722896441555-57cd3b2e2513","1579690602078-3ce1051c4449","1612561855855-d9344eb8187d"],"thunder":["1673990964789-99bfe6d1eed2","1527782946758-e8e39bb18d0e","1605727216801-e27ce1d0cc28","1571940178545-845b8e35a9a7"],"wind":["1505672678657-cc7037095e60","1471428956182-52671c58549a","1723530937778-187411e61a1e","1741282992593-b127a96232f9"],"frost":["1642786842410-96e83ecab5d7","1763832869917-1564d46d82aa","1645353142487-06deab9328c4","1549821037-ae0c0675126b"],"snowlight":["1518972734183-c5b490a7c637","1520262454473-a1a82276a574","1707250085074-14f2289cccdc","1507181179506-598491b53db4"],"snowheavy":["1548323062-715b68c7ae90","1491002052546-bf38f186af56","1456441240751-2a368527053f","1676363707718-eabe464ca9ae"],"fog":["1486707471592-8e7eb7e36f78","1694282881698-d0197b47305e","1446491429004-809880bd132e","1632214641031-6bce7ba56494","1763306625846-e8341843d2f8"],"haze":["1444927714506-8492d94b4e3d","1670331503989-9ca315c61176","1732010929083-626194f953bd","1732010929209-07fa0444e978"],"heat":["1752122094097-a27239f964cd","1582473527051-84a0596e3c2e","1503453073987-b1418bd87c82","1471268762677-cb5179779bfe","1772552627876-a1ae3733b4fc"],"dawn":["1622993288089-18298ec89b78","1562198685-ff01141ee86d","1736649236088-9e5abca1c08d","1503424160383-57de83bd6fb2"],"sunset":["1515497957908-4d6377430754","1659608300525-a71e30dd2420","1506880648420-aafaa650d147","1526420420164-b4ae06c5f886"],"night":["1698100838054-78a1175928c0","1513921092067-77d65e89cfa2","1696067027984-8c63976232f5","1599939571322-792a326991f2","1637268060109-45ff24aacb80"],"rainnight":["1643287146701-93c795880dda","1642603195143-aa88cb9f86c9","1722252556945-6afb04bac3e2","1554103577-c0d26e9b90e0","1611482909130-a0d1cbc268af"]};
 var REMARKS = {
   clear: [
-    'Lunch tastes better outside.',
-    'Good day to hang laundry out.',
+    'Lunch tastes better outside.|5-14',
+    'Good day to hang laundry out.|5-14',
     'Open a window.',
     'Sunglasses weather.',
     'Go outside. That is all.',
     'Somebody left the sun on.',
-    'Take the long way home.',
-    'Coffee by the open window.',
+    'Take the long way home.|12-24',
+    'Coffee by the open window.|5-17',
     'Find a bench in the sun.',
     'Get off one stop early.',
-    'A good day for the long walk.',
+    'A good day for the long walk.|5-15',
     'Sit facing south.',
   ],
   partly: [
@@ -45,23 +45,23 @@ var REMARKS = {
     'Good enough for the park.',
     'Take the sun when it shows.',
     'Window seat, if you can.',
-    'Hang the laundry. Risk it.',
-    'A good day for a walk at lunch.',
-    'Coffee outside, between clouds.',
+    'Hang the laundry. Risk it.|5-14',
+    'A good day for a walk at lunch.|5-14',
+    'Coffee outside, between clouds.|5-17',
   ],
   overcast: [
     'Good light for photographs.',
     'Nothing falling. Take the win.',
-    'Lamp on at noon.',
+    'Lamp on at noon.|5-14',
     'No squinting today.',
-    'Light a candle at breakfast.',
+    'Light a candle at breakfast.|5-10',
     'Good day for the cinema.',
     'Bake something.',
     'Call someone back.',
     'A pot of tea will fix it.',
     'Dry enough for a walk.',
     'Wear the bright scarf.',
-    'Good day to clear the desk.',
+    'Good day to clear the desk.|5-16',
   ],
   drizzle: [
     'Umbrella optional.',
@@ -102,8 +102,8 @@ var REMARKS = {
     'Second pair of socks.',
     'Listen from the sofa.',
     'Bring the cushions in.',
-    'Order in tonight.',
-    'Stretch the coffee a little.',
+    'Order in tonight.|14-24',
+    'Stretch the coffee a little.|5-17',
   ],
   showers: [
     'Take the umbrella anyway.',
@@ -142,7 +142,7 @@ var REMARKS = {
     'Hair is a lost cause.',
     'Skip the umbrella. It will lose.',
     'Doors will slam.',
-    'Good day for a kite.',
+    'Good day for a kite.|5-17',
     'Bring the washing in.',
     'Scarf tucked in.',
     'Close the balcony door.',
@@ -155,7 +155,7 @@ var REMARKS = {
     'The grass is wearing white.',
     'Watch the steps.',
     'Breath you can see.',
-    'Start the car early.',
+    'Start the car early.|5-10',
     'Crunchy underfoot.',
     'A hat that covers the ears.',
     'Tea in a flask.',
@@ -184,20 +184,20 @@ var REMARKS = {
     'Plans are optional today.',
     'Find the big boots.',
     'Trains will be late.',
-    'Clear the steps before dark.',
+    'Clear the steps before dark.|5-16',
     'Build something in the yard.',
     'Feed the birds.',
-    'Work from the sofa.',
+    'Work from the sofa.|5-17',
   ],
   fog: [
     'Walk slowly. It is nicer anyway.',
-    'Lights on, even at noon.',
+    'Lights on, even at noon.|5-15',
     'Sound carries today.',
     'Bright jacket on the bike.',
     'The neighbours are gone for now.',
     'Take the path you know.',
-    'A good day for a slow start.',
-    'Second coffee. It will lift.',
+    'A good day for a slow start.|5-12',
+    'Second coffee. It will lift.|5-13',
     'Follow the street lamps.',
     'Scarf over the mouth.',
     'Photograph the trees today.',
@@ -213,19 +213,19 @@ var REMARKS = {
     'A walk along the river instead.',
     'Windows can stay open.',
     'Leave the camera at home.',
-    'Good light for a nap.',
+    'Good light for a nap.|11-18',
     'The mountain can wait a day.',
     'Read on the balcony.',
   ],
   heat: [
     'Hat on.',
     'Open the windows after dark.',
-    'Close the blinds by ten.',
+    'Close the blinds by ten.|5-11',
     'Even the shadows are warm.',
     'Move slowly.',
     'The shade is taken.',
     'Drink water. Then more.',
-    'Before noon or after six.',
+    'Before noon or after six.|5-18',
     'Ice in everything.',
     'Find water. Get in.',
     'Nobody is in a hurry today.',
@@ -313,7 +313,8 @@ var EXTRA = {
   ending: [
     'Nearly done.',
     'Wait it out.',
-    'One more coffee, then go.',
+    'One more coffee, then go.|5-17',
+    'One more chapter, then go.',
     'The worst is behind us.',
     'Give it an hour.',
     'Shoes by the door. Almost time.',
@@ -441,7 +442,7 @@ function story(j){
     
     if (['thunder', 'downpour', 'snowheavy'].includes(loud)) for (let i = i0 + 1; i < i0 + 8; i++) if (K(i) !== loud && K(i + 1) !== loud){ e1 = i; break; }
     if (e1 > 0 && falls(K(e1))) fact = `${nm} until ${at(e1)}, then ${NAME[K(e1)].toLowerCase()}.`;
-    else if (e > 0 && e - i0 <= 12){ fact = `${nm} until ${at(e)}, then ${after(e) || 'dry'}.`; if (e - i0 <= 3) turn = 'ending'; }
+    else if (e > 0 && e - i0 <= 12){ fact = `${nm} until ${at(e)}, then ${after(e) || 'dry'}.`; if (e - i0 <= 3 && hr < 20) turn = 'ending';    }
     else fact = moment === 'morning' ? `${nm} all day.` : moment === 'afternoon' ? `${nm} into the night.` : `${nm} through the night.`;
   } else {
     let s = -1; for (let i = i0 + 2; i <= last; i++) if (falls(K(i))){ s = i; break; }
@@ -492,9 +493,15 @@ function story(j){
   const set = turn === 'heat' ? REMARKS.heat : (turn && EXTRA[turn]) || REMARKS[key];
   const calm = !turn && ['clear', 'partly', 'overcast', 'haze'].includes(key), wk = calm ? EXTRA[wd.toLowerCase()] : null;
   const seed = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / 36e5);   
-  return { key, moment, fact, turn, left, right, set, wk, seed };
+  return { key, moment, hr, fact, turn, left, right, set, wk, seed };
 }
-const remark = (st, n) => { const i = st.seed + n; return st.wk && i % 6 === 0 ? st.wk[Math.floor(i / 6) % st.wk.length] : st.set[i % st.set.length]; };
+
+const remark = (st, n) => {
+  const fits = s => { const m = /\|(\d+)-(\d+)$/.exec(s); return !m || (st.hr >= +m[1] && st.hr < +m[2]); };
+  const pool = list => { const f = list.filter(fits); return f.length ? f : list; };
+  const i = st.seed + n, list = st.wk && i % 6 === 0 ? pool(st.wk) : pool(st.set), k = st.wk && i % 6 === 0 ? Math.floor(i / 6) : i;
+  return list[k % list.length].replace(/\|\d+-\d+$/, '');
+};
 function wwRing(px){ var s = [], a, r; for (r = 1; r <= 2; r++) for (a = 0; a < 12; a++) s.push((Math.cos(a * Math.PI / 6) * px * r / 2).toFixed(2) + 'px ' + (Math.sin(a * Math.PI / 6) * px * r / 2).toFixed(2) + 'px 0 #000'); return s.join(','); }
 function wwPaint(el){
   var mode = el.getAttribute('data-ww'), w = el.clientWidth, h = el.clientHeight, probe = el.querySelector('.ww-probe');

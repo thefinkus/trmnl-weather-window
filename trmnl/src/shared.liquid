@@ -494,7 +494,9 @@ function story(j){
   const set = turn === 'heat' ? REMARKS.heat : (turn && EXTRA[turn]) || REMARKS[key];
   const calm = !turn && ['clear', 'partly', 'overcast', 'haze'].includes(key), wk = calm ? EXTRA[wd.toLowerCase()] : null;
   const seed = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / 36e5);   
-  return { key, moment, hr, fact, turn, left, right, set, wk, seed };
+  
+  const pic = Math.floor((seed - 5) / 24);
+  return { key, moment, hr, fact, turn, left, right, set, wk, seed, pic };
 }
 
 const remark = (st, n) => {
@@ -509,8 +511,8 @@ function wwPaint(el){
   var isX = window.WW_FORCE ? window.WW_FORCE === 'x' : !!probe && getComputedStyle(probe).display !== 'none';
   var tall = h > w * 1.05, st = null, line2 = '';
   try { WW_OPT.f = WW_SET.units === 'f'; WW_OPT.h12 = WW_SET.clock === '12'; st = story(WW_DATA); line2 = remark(st, 0); } catch (e) { st = null; }
-  if (!st) st = { key: 'overcast', fact: 'No forecast right now.', left: '', right: '', seed: 0 }, line2 = 'Look out of the real window.';
-  var list = STILLS[st.key], id = list[st.seed % list.length];
+  if (!st) st = { key: 'overcast', fact: 'No forecast right now.', left: '', right: '', seed: 0, pic: 0 }, line2 = 'Look out of the real window.';
+  var list = STILLS[st.key], id = list[((st.pic % list.length) + list.length) % list.length];   /* one photograph per mood and day */
   var img = document.createElement('img'); img.className = 'image image-dither'; img.alt = ''; img.style.objectFit = 'cover';
   img.src = WW_BASE + (isX ? 'x' : 'og') + (tall ? '_portrait' : '') + '/' + id + '.png';
   el.appendChild(img);

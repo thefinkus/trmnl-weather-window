@@ -5,14 +5,15 @@
   Built by 02_Tools/build_plugin.py from the browser prototype. Do not edit by hand.
 {% endcomment %}
 <style>
-@font-face{font-family:"WW Fraunces";font-style:normal;font-weight:500;font-display:block;src:url(https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5.2.9/files/fraunces-latin-500-normal.woff2) format("woff2")}
-@font-face{font-family:"WW Fraunces";font-style:italic;font-weight:500;font-display:block;src:url(https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5.2.9/files/fraunces-latin-500-italic.woff2) format("woff2")}
+@font-face{font-family:"WW Fraunces";font-style:normal;font-weight:600;font-display:block;src:url(https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5.2.9/files/fraunces-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"WW Fraunces";font-style:italic;font-weight:600;font-display:block;src:url(https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5.2.9/files/fraunces-latin-600-italic.woff2) format("woff2")}
 .ww{position:relative;overflow:hidden;background:#000;color:#fff}
 .ww img{position:absolute;left:0;top:0;width:100%;height:100%}
 .ww div{position:absolute;line-height:1.22}
-.ww .ww-sub{left:4%;right:4%;font-family:"WW Fraunces",Georgia,serif;font-weight:500}
-.ww .ww-sub i{display:block}
-.ww .ww-note{white-space:pre;font-family:"Inter Variable",Inter,sans-serif;font-weight:600;letter-spacing:.12em}
+.ww .ww-sub{left:4%;right:4%;font-family:"WW Fraunces",Georgia,serif;font-weight:600}
+.ww .ww-sub span,.ww .ww-sub i{display:block;white-space:nowrap}
+.ww .ww-note{white-space:pre;font-family:"Inter Variable",Inter,sans-serif;font-weight:700;letter-spacing:.12em}
+.ww .ww-shade{left:0;right:0}
 </style>
 <script>
 var WW_DATA = { current: {{ current | json }}, hourly: {{ hourly | json }}, daily: {{ daily | json }} };
@@ -513,14 +514,22 @@ function wwPaint(el){
   var img = document.createElement('img'); img.className = 'image image-dither'; img.alt = ''; img.style.objectFit = 'cover';
   img.src = WW_BASE + (isX ? 'x' : 'og') + (tall ? '_portrait' : '') + '/' + id + '.png';
   el.appendChild(img);
-  /* text sizes: the prototype's proportions (27, 33 and 13 px on an 800 px wide picture), with floors so the OG stays readable */
-  var small = mode !== 'full', k = Math.min(w, h * 1.7) / 800 * (small ? 1.25 : 1);
-  var fs1 = Math.max(isX ? 20 : 22, 27 * k), fs2 = Math.max(isX ? 24 : 26, 33 * k), fs3 = Math.max(isX ? 12 : 14, 13 * k);
+  /* text sizes, readable from across the room: both lines 44 px and the corner notes 19.7 px on an 800 px wide
+     picture (on the X: 104 and 46 device px, about 11.5 and 5 mm), weight 600, a soft shade behind them */
+  var small = mode !== 'full', k = Math.min(w, h * 1.7) / 800 * (small ? 1.1 : 1);
+  var fs1 = Math.max(isX ? 22 : 24, 44.4 * k), fs3 = Math.max(isX ? 13 : 15, 19.7 * k);
   var both = mode === 'full' || mode === 'half_horizontal';
-  var sub = document.createElement('div'); sub.className = 'ww-sub text--center'; sub.style.bottom = (small ? 5 : 4.2) + '%'; sub.style.textShadow = wwRing(fs1 * (isX ? 0.11 : 0.15));
-  var a = document.createElement('span'); a.style.fontSize = fs1 + 'px'; a.textContent = st.fact; sub.appendChild(a);
-  if (both){ var b = document.createElement('i'); b.style.fontSize = fs2 + 'px'; b.textContent = line2; sub.appendChild(b); }
+  var shade = function(edge, part, dark){ var d = document.createElement('div'); d.className = 'ww-shade'; d.style[edge] = '0'; d.style.height = part + '%'; d.style.background = 'linear-gradient(to ' + (edge === 'top' ? 'bottom' : 'top') + ',rgba(0,0,0,' + dark + '),rgba(0,0,0,' + (dark * 0.7).toFixed(2) + ') 45%,rgba(0,0,0,0))'; el.appendChild(d); };
+  shade('bottom', both ? 40 : 30, 0.86); shade('top', small ? 20 : 13, 0.7);
+  var sub = document.createElement('div'); sub.className = 'ww-sub text--center'; sub.style.bottom = (small ? 5 : 4.2) + '%'; sub.style.textShadow = wwRing(fs1 * (isX ? 0.10 : 0.13));
+  var a = document.createElement('span'); a.textContent = st.fact; sub.appendChild(a);
+  var lines = [a];
+  if (both){ var b = document.createElement('i'); b.textContent = line2; sub.appendChild(b); lines.push(b); }
   el.appendChild(sub);
+  /* a long line shrinks until it fits; measured again once the webfont is there */
+  var fit = function(){ var room = sub.clientWidth, j, wd; for (j = 0; j < lines.length; j++){ lines[j].style.fontSize = fs1 + 'px'; wd = lines[j].scrollWidth; if (wd > room) lines[j].style.fontSize = Math.max(fs1 * 0.6, fs1 * room / wd * 0.99).toFixed(1) + 'px'; } };
+  fit();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   var note = function(text, side){ if (!text) return; var d = document.createElement('div'); d.className = 'ww-note'; d.style.fontSize = fs3 + 'px'; d.style.top = (2.9 * (w / h > 1 ? 1 : 0.7)) + '%'; d.style[side] = '3.2%'; d.style.textShadow = wwRing(fs3 * 0.16); d.textContent = text; el.appendChild(d); };
   note((WW_SET.place ? WW_SET.place.toUpperCase() + '   ' : '') + st.left, 'left');
   if (mode === 'full' && !tall) note(st.right, 'right');

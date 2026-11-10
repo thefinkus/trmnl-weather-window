@@ -6,7 +6,7 @@ polling_verb: get
 polling_url: 'https://api.open-meteo.com/v1/forecast?latitude={{ trmnl.plugin_settings.custom_fields_values.latitude | default: "48.137" }}&longitude={{ trmnl.plugin_settings.custom_fields_values.longitude | default: "11.575" }}&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,precipitation,weather_code,cloud_cover,wind_gusts_10m,visibility,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&forecast_days=3&timezone=auto'
 refresh_interval: 60
 dark_mode: 'no'
-no_screen_padding: 'no'
+no_screen_padding: 'yes'
 custom_fields:
   - keyname: about
     name: About this plugin

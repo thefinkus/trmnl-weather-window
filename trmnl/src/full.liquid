@@ -1,4 +1,563 @@
 <div class="layout layout--col p--0">
-  {% comment %} Weather Window, full screen: the script in shared.liquid fills this cell. {% endcomment %}
+  {% comment %} Weather Window, full screen: the script below fills this cell. {% endcomment %}
   <div class="ww w--full h--full" data-ww="full"><b class="ww-probe hidden lg:block"></b></div>
 </div>
+{% comment %}
+  Weather Window. Open-Meteo's answer arrives as current, hourly and daily. The script below reads it,
+  picks one of 19 moods for the next three hours, writes the two subtitle lines and the corner notes, and
+  places a photograph that was rendered in advance for this panel (X: 16 greys, OG: black and white).
+  Built by 02_Tools/build_plugin.py from the browser prototype. Do not edit by hand.
+{% endcomment %}
+<style>
+@font-face{font-family:"WW Fraunces";font-style:normal;font-weight:600;font-display:block;src:url(https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5.2.9/files/fraunces-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"WW Fraunces";font-style:italic;font-weight:600;font-display:block;src:url(https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5.2.9/files/fraunces-latin-600-italic.woff2) format("woff2")}
+.ww{position:relative;overflow:hidden;background:#000;color:#fff}
+.ww img{position:absolute;left:0;top:0;width:100%;height:100%}
+.ww div{position:absolute;line-height:1.22}
+.ww .ww-sub{left:4%;right:4%;font-family:"WW Fraunces",Georgia,serif;font-weight:600}
+.ww .ww-sub span,.ww .ww-sub i{display:block;white-space:nowrap}
+.ww .ww-note{white-space:pre;font-family:"Inter Variable",Inter,sans-serif;font-weight:700;letter-spacing:.12em}
+.ww .ww-shade{left:0;right:0}
+</style>
+<script src="https://cdn.jsdelivr.net/gh/thefinkus/trmnl-weather-window@adbc5c09fb5a61296e92d04b221b11de8744adca/towns.js"></script>
+<script>
+var WW_DATA = { current: {{ current | json }}, hourly: {{ hourly | json }}, daily: {{ daily | json }} };
+var WW_SET = { place: {{ trmnl.plugin_settings.custom_fields_values.place | default: "" | json }}, ll: {{ trmnl.plugin_settings.custom_fields_values.lat_lon | default: "48.137,11.575" | json }}, units: {{ trmnl.plugin_settings.custom_fields_values.units | default: "c" | json }}, clock: {{ trmnl.plugin_settings.custom_fields_values.clock | default: "24" | json }} };
+var WW_BASE = "https://cdn.jsdelivr.net/gh/thefinkus/trmnl-weather-window@adbc5c09fb5a61296e92d04b221b11de8744adca/stills/";
+{% raw %}
+var STILLS = {"clear":["1558215664-756693fa4a82","1588421357538-7c22591e4f90","1590077428593-a55bb07c4665","1518717202715-9fa9d099f58a"],"partly":["1525490829609-d166ddb58678","1591010746236-f0fa10edf051","1596627546982-d62c02c55b00","1563705330026-7b2d352069c3"],"overcast":["1770748723990-f969ba4b5f9d","1778846276877-643cc8fa66e8","1770571179652-c517185a0c9e","1653773526974-6dc0e45a89fc"],"drizzle":["1433863448220-78aaa064ff47","1489781879256-fa824b56f24f","1611738740585-3598e06e0f8c","1623979804482-5a0605157262"],"rain":["1428592953211-077101b2021b","1692362385851-cf68a6d9604b","1542273917363-3b1817f69a2d","1460751329354-07d91b47af38"],"downpour":["1501999635878-71cb5379c2d8","1622987857832-a31ceda6ad0d","1640600997533-1b44078d394b","1716913897161-d22267f4a4b6"],"showers":["1608012808044-704827b6cf12","1722896441555-57cd3b2e2513","1579690602078-3ce1051c4449","1612561855855-d9344eb8187d"],"thunder":["1673990964789-99bfe6d1eed2","1527782946758-e8e39bb18d0e","1605727216801-e27ce1d0cc28","1571940178545-845b8e35a9a7"],"wind":["1505672678657-cc7037095e60","1471428956182-52671c58549a","1723530937778-187411e61a1e","1741282992593-b127a96232f9"],"frost":["1642786842410-96e83ecab5d7","1763832869917-1564d46d82aa","1645353142487-06deab9328c4","1549821037-ae0c0675126b"],"snowlight":["1518972734183-c5b490a7c637","1520262454473-a1a82276a574","1707250085074-14f2289cccdc","1507181179506-598491b53db4"],"snowheavy":["1548323062-715b68c7ae90","1491002052546-bf38f186af56","1456441240751-2a368527053f","1676363707718-eabe464ca9ae"],"fog":["1486707471592-8e7eb7e36f78","1694282881698-d0197b47305e","1446491429004-809880bd132e","1632214641031-6bce7ba56494","1763306625846-e8341843d2f8"],"haze":["1444927714506-8492d94b4e3d","1670331503989-9ca315c61176","1732010929083-626194f953bd","1732010929209-07fa0444e978"],"heat":["1752122094097-a27239f964cd","1582473527051-84a0596e3c2e","1503453073987-b1418bd87c82","1471268762677-cb5179779bfe","1772552627876-a1ae3733b4fc"],"dawn":["1622993288089-18298ec89b78","1562198685-ff01141ee86d","1736649236088-9e5abca1c08d","1503424160383-57de83bd6fb2"],"sunset":["1515497957908-4d6377430754","1659608300525-a71e30dd2420","1506880648420-aafaa650d147","1526420420164-b4ae06c5f886"],"night":["1698100838054-78a1175928c0","1513921092067-77d65e89cfa2","1696067027984-8c63976232f5","1599939571322-792a326991f2","1637268060109-45ff24aacb80"],"rainnight":["1643287146701-93c795880dda","1642603195143-aa88cb9f86c9","1722252556945-6afb04bac3e2","1554103577-c0d26e9b90e0","1611482909130-a0d1cbc268af"]};
+var REMARKS = {
+  clear: [
+    'Lunch tastes better outside.|5-14',
+    'Good day to hang laundry out.|5-14',
+    'Open a window.',
+    'Sunglasses weather.',
+    'Go outside. That is all.',
+    'Somebody left the sun on.',
+    'Take the long way home.|12-24',
+    'Coffee by the open window.|5-17',
+    'Find a bench in the sun.',
+    'Get off one stop early.',
+    'A good day for the long walk.|5-15',
+    'Sit facing south.',
+  ],
+  partly: [
+    'Fair enough.',
+    'Sit on the sunny side.',
+    'Bright spells. Take them.',
+    'A bit of everything, mostly good.',
+    'Walk on the sunny side.',
+    'Jacket on, jacket off.',
+    'Good enough for the park.',
+    'Take the sun when it shows.',
+    'Window seat, if you can.',
+    'Hang the laundry. Risk it.|5-14',
+    'A good day for a walk at lunch.|5-14',
+    'Coffee outside, between clouds.|5-17',
+  ],
+  overcast: [
+    'Good light for photographs.',
+    'Nothing falling. Take the win.',
+    'Lamp on at noon.|5-14',
+    'No squinting today.',
+    'Light a candle at breakfast.|5-10',
+    'Good day for the cinema.',
+    'Bake something.',
+    'Call someone back.',
+    'A pot of tea will fix it.',
+    'Dry enough for a walk.',
+    'Wear the bright scarf.',
+    'Good day to clear the desk.|5-16',
+  ],
+  drizzle: [
+    'Umbrella optional.',
+    'A hood will do.',
+    'It adds up. Take a jacket.',
+    'Wipers on the slow setting.',
+    'Hair will have its own plans.',
+    'Cap weather.',
+    'Good for the garden.',
+    'Walk anyway. It is only mist.',
+    'Wipe the bike seat first.|6-22',
+    'Jacket yes, umbrella no.',
+    'The dog will not mind.',
+    'Shoes will survive this one.',
+  ],
+  rain: [
+    'Let it rain. We have time.',
+    'Good weather for staying.',
+    'The plants asked for this.',
+    'Take the umbrella.',
+    'Shoes that can take it.',
+    'Soup weather.',
+    'A good day for the long book.',
+    'Nobody waters the garden today.',
+    'Coat with a hood.',
+    'Put the kettle on.',
+    'Boots, if you have them.',
+    'Cook something slow.',
+  ],
+  downpour: [
+    'Nobody looks good out there.',
+    'Whatever it was, it can wait.',
+    'The gutters are busy.',
+    'Stay in if you can.',
+    'An umbrella is a suggestion now.',
+    'Wait for a gap.',
+    'Close the windows.',
+    'Second pair of socks.',
+    'Listen from the sofa.',
+    'Bring the cushions in.',
+    'Order in tonight.|14-24',
+    'Stretch the coffee a little.|5-17',
+  ],
+  showers: [
+    'Take the umbrella anyway.',
+    'Wait ten minutes.',
+    'Look for the bright gap.',
+    'Pack the jacket, wear the shirt.',
+    'Time it right and stay dry.',
+    'Rainbow chances: fair.',
+    'Check the sky before you go.',
+    'Run between the drops.',
+    'Laundry in. Laundry out.|7-20',
+    'Keep a hood handy.',
+    'Sit under the awning.',
+    'A doorway will do for now.',
+  ],
+  thunder: [
+    'Stay where the tea is.',
+    'Count the seconds.',
+    'Unplug the good stuff.',
+    'Keep the dog close.',
+    'Watch it from inside.',
+    'Shut the skylight.',
+    'The cat already knows.',
+    'Bring the laundry in.|7-21',
+    'Swimming can wait.|8-21',
+    'No day for the hilltop.',
+    'Lights low, curtains open.',
+    'A good show from the sofa.',
+  ],
+  wind: [
+    'Tie down the garden chairs.',
+    'Zip it up.',
+    'Hold on to your hat.',
+    'Cycling: one way is free.',
+    'Bins will travel.',
+    'Hair is a lost cause.',
+    'Skip the umbrella. It will lose.',
+    'Doors will slam.',
+    'Good day for a kite.|5-17',
+    'Bring the washing in.|7-21',
+    'Scarf tucked in.',
+    'Close the balcony door.',
+  ],
+  frost: [
+    'Gloves.',
+    'Two layers under the coat.',
+    'Scrape first, then go.',
+    'The puddles have lids.',
+    'The grass is wearing white.',
+    'Watch the steps.',
+    'Breath you can see.',
+    'Start the car early.|5-10',
+    'Crunchy underfoot.',
+    'A hat that covers the ears.',
+    'Tea in a flask.',
+    'Warm the mug first.',
+  ],
+  snowlight: [
+    'The first tracks are yours.',
+    'It is quiet out there.',
+    'Everything got rounder.',
+    'Wear the good socks.',
+    'Boots by the door.',
+    'Look up for a minute.',
+    'Walk, if you can.',
+    'Every roof got the same paint.',
+    'Slow on the corners.',
+    'Scarf weather.',
+    'Catch one on your sleeve.',
+    'Hot chocolate has a reason now.',
+  ],
+  snowheavy: [
+    'Shovel now, shovel later.',
+    'Nobody is going anywhere. Good.',
+    'Leave the car.',
+    'Stay in. Make something warm.',
+    'Check on the neighbours.',
+    'Plans are optional today.',
+    'Find the big boots.',
+    'Trains will be late.',
+    'Clear the steps before dark.|5-16',
+    'Build something in the yard.',
+    'Feed the birds.',
+    'Work from the sofa.|5-17',
+  ],
+  fog: [
+    'Walk slowly. It is nicer anyway.',
+    'Lights on, even at noon.|5-15',
+    'Sound carries today.',
+    'Bright jacket on the bike.',
+    'The neighbours are gone for now.',
+    'Take the path you know.',
+    'A good day for a slow start.|5-12',
+    'Second coffee. It will lift.|5-13',
+    'Follow the street lamps.',
+    'Scarf over the mouth.',
+    'Photograph the trees today.',
+    'Listen for the church bells.',
+  ],
+  haze: [
+    'Dry, at least.',
+    'Good day for near things.',
+    'The view will be back.',
+    'Skip the viewpoint today.',
+    'Sunglasses anyway.',
+    'Easy on the eyes.',
+    'A walk along the river instead.',
+    'Windows can stay open.',
+    'Leave the camera at home.',
+    'Good light for a nap.|11-18',
+    'The mountain can wait a day.',
+    'Read on the balcony.',
+  ],
+  heat: [
+    'Hat on.',
+    'Open the windows after dark.',
+    'Close the blinds by ten.|5-11',
+    'Even the shadows are warm.',
+    'Move slowly.',
+    'The shade is taken.',
+    'Drink water. Then more.',
+    'Before noon or after six.|5-18',
+    'Ice in everything.',
+    'Find water. Get in.',
+    'Nobody is in a hurry today.',
+    'Cold supper tonight.',
+  ],
+  dawn: [
+    'Still cold. Give it an hour.',
+    'Coffee first.',
+    'The birds are ahead of you.',
+    'Worth getting up for.',
+    'First light. Nobody else is up.',
+    'The street lamps are clocking off.',
+    'The best light is right now.',
+    'Take the coffee outside.',
+    'Walk before the street wakes.',
+    'The bakery is already open.',
+    'Open the curtains.',
+    'Jacket now, sleeves later.',
+  ],
+  sunset: [
+    'One more look.',
+    'Look now. It goes fast.',
+    'Worth the walk to the window.',
+    'Last light. Use it.',
+    'The windows across are gold.',
+    'Lights on soon.',
+    'Finish up outside.',
+    'West-facing windows win.',
+    'That was the day.',
+    'Stop for a minute.',
+    'Bring a jacket for the way back.',
+    'Pour something. Sit by the window.',
+  ],
+  night: [
+    'A good night to walk home.',
+    'Look up.',
+    'Stars, if you step outside.',
+    'Curtains open tonight.',
+    'The street is yours.',
+    'Count a few. Then bed.',
+    'The day can wait until morning.',
+    'Leave a window open a crack.',
+    'Step onto the balcony.',
+    'Take the dog round once more.',
+    'Extra blanket, window open.',
+    'Lights off for a minute.',
+  ],
+  rainnight: [
+    'The gutters work the night shift.',
+    'Good sleeping weather.',
+    'Listen to it.',
+    'Take a cab.',
+    'A good night to stay in.',
+    'Window open a crack, to hear it.',
+    'Tomorrow can sort itself out.',
+    'A lamp and a book will do.',
+    'Nobody is out. Fair.',
+    'Tea and a blanket.',
+    'Leave the shoes by the heater.',
+    'Fall asleep to it.',
+  ],
+};
+var EXTRA = {
+  
+  beforeRain: [
+    'Get the walk in early.|5-16',
+    'Take the umbrella for later.',
+    'Bring the laundry in by then.|7-20',
+    'Enjoy the dry part.',
+    'Errands first.|6-18',
+    'The good hours come first.',
+    'Bike there, bus back.|6-19',
+    'It will not last. Use it.',
+  ],
+  
+  beforeSnow: [
+    'Find the gloves now.',
+    'Shop before it starts.|7-20',
+    'Park somewhere flat.',
+    'Bring the shovel up.',
+    'The quiet starts later.',
+    'Watch for the first flakes.',
+  ],
+  
+  ending: [
+    'Nearly done.',
+    'Wait it out.',
+    'One more coffee, then go.|5-17',
+    'One more chapter, then go.',
+    'The worst is behind us.',
+    'Give it an hour.',
+    'Shoes by the door. Almost time.',
+    'Find your shoes.',
+    'Hold the walk a little.|6-20',
+  ],
+  
+  cloudLater: [
+    'Catch the sun while it is out.',
+    'The bright part comes first.',
+    'Sit outside now.',
+    'Sun first. Take it.',
+  ],
+  
+  sunLater: [
+    'Hold on. It brightens.',
+    'The good part comes later.',
+    'Save the walk for later.',
+    'It gets better.',
+  ],
+  
+  frostTonight: [
+    'Bring the plants in.',
+    'Cover the car windows.',
+    'Extra blanket tonight.',
+    'Shut off the garden tap.',
+    'Gloves by the door for morning.',
+    'A cold one is coming.',
+  ],
+  
+  tomorrowWetLate: [
+    'The morning is yours.',
+    'Do the outdoor part early.',
+    'Walk before lunch.',
+  ],
+  
+  tomorrowWet: [
+    'Umbrella by the door tonight.',
+    'Set the alarm a little earlier.',
+    'Tomorrow is an indoor day.',
+    'Find the raincoat tonight.',
+    'Plan B for tomorrow.',
+  ],
+  
+  tomorrowFine: [
+    'Something to look forward to.',
+    'Make a plan for outside.',
+    'Sleep well. It will be bright.',
+    'Tomorrow is the better day.',
+    'Pump up the bike tyres.',
+    'Breakfast outside, maybe.',
+  ],
+  
+  cloudNight: [
+    'Curtains closed, lamp on.',
+    'An early night.',
+    'Tea, then bed.',
+    'No stars tonight. Sleep.',
+    'A quiet one.',
+  ],
+  
+  mon: ['Monday, but a kind one.', 'A gentle start to the week.'],
+  fri: ['Friday. Leave on time.', 'Nearly there. It is Friday.'],
+  sat: ['Saturday has no agenda.', 'Stay in bed a bit.'],
+  sun: ['Sunday. No rush.', 'Nothing is due today.'],
+};
+const WET = new Set(['thunder', 'downpour', 'showers', 'drizzle', 'rain']), SNOW = new Set(['snowheavy', 'snowlight']);
+const falls = k => WET.has(k) || SNOW.has(k);
+const LOUD = ['thunder', 'snowheavy', 'downpour', 'rain', 'snowlight', 'showers', 'drizzle'];   
+const NAME = { thunder: 'Thunderstorms', downpour: 'Heavy rain', showers: 'Showers', drizzle: 'Drizzle', rain: 'Rain', snowlight: 'Snow', snowheavy: 'Heavy snow' };
+function kindAt(H, i){
+  const w = H.weather_code[i]; if (w == null) return 'dry';
+  if (w >= 95) return 'thunder';
+  if (w === 75 || w === 86) return 'snowheavy';
+  if ((w >= 71 && w <= 77) || w === 85) return 'snowlight';
+  if (w === 65 || w === 67 || w === 82) return 'downpour';
+  if (w === 80 || w === 81) return 'showers';
+  if (w >= 61 && w <= 66) return 'rain';
+  if (w >= 51 && w <= 57) return 'drizzle';
+  if (w === 45 || w === 48) return 'fog';
+  return 'dry';
+}
+
+var WW_OPT = { f: false, h12: false };
+const deg = v => `${Math.round(WW_OPT.f ? v * 9 / 5 + 32 : v) || 0}°`;
+const speed = v => WW_OPT.f ? `${Math.round(v * 0.621 / 5) * 5} mph` : `${v} km/h`;
+const clock = t => { if (!WW_OPT.h12) return t; const h = +t.slice(0, 2), m = t.slice(3, 5); return `${h % 12 || 12}${m === '00' ? '' : ':' + m} ${h >= 12 ? 'pm' : 'am'}`; };
+
+function story(j){
+  const c = j.current, H = j.hourly, D = j.daily, hr = +c.time.slice(11, 13), today = c.time.slice(0, 10);
+  const i0 = Math.max(0, H.time.indexOf(c.time.slice(0, 13) + ':00')), K = i => kindAt(H, i), at = i => clock(H.time[i].slice(11, 16));
+  const moment = hr >= 18 ? 'evening' : hr >= 11 ? 'afternoon' : 'morning';
+  const mean = (a, i, n) => { let s = 0, m = 0; for (let x = i; x < i + n && x < a.length; x++){ s += a[x] || 0; m++; } return m ? s / m : 0; };
+  const win = [i0, i0 + 1, i0 + 2].map(K), cloud = mean(H.cloud_cover, i0, 3), temps = H.temperature_2m.slice(i0, i0 + 3);
+  const now = new Date(c.time), sinceRise = (now - new Date(D.sunrise[0])) / 6e4, toSet = (new Date(D.sunset[0]) - now) / 6e4;
+  
+  const sunOk = D.sunrise[0].slice(0, 10) === today && D.sunset[0].slice(0, 10) === today && sinceRise + toSet > 60;
+  const night = sunOk ? (sinceRise + 30 < 0 || toSet - 30 <= 0) : !H.is_day[Math.min(i0 + 1, H.is_day.length - 1)];
+  const gusts = H.wind_gusts_10m.slice(i0, i0 + 6).map(v => v || 0), gustNow = Math.max(...gusts.slice(0, 3));
+  const after = e => mean(H.cloud_cover, e, 3) < 45 ? (H.is_day[e] ? 'sun' : 'clear') : null;
+
+  
+  let key; const loud = LOUD.find(k => win.includes(k));
+  if (win.includes('thunder')) key = 'thunder';
+  else if (loud && (falls(win[0]) || win.filter(falls).length >= 2)) key = night && WET.has(loud) ? 'rainnight' : loud;
+  else if (gustNow > 60) key = 'wind';
+  else if (win[0] === 'fog' || win.filter(k => k === 'fog').length >= 2) key = 'fog';
+  else if (sinceRise > -30 && sinceRise < 60 && cloud < 80) key = 'dawn';
+  else if (toSet < 75 && toSet > -40 && cloud < 80) key = 'sunset';
+  else if (night) key = cloud > 70 ? 'overcast' : 'night';
+  else if (Math.max(...temps) >= 30) key = 'heat';
+  else if (Math.min(...temps) <= 0 && cloud < 50) key = 'frost';
+  else if ((H.visibility[i0] == null ? 1e6 : H.visibility[i0]) < 8000) key = 'haze';
+  else key = cloud > 80 ? 'overcast' : cloud > 25 ? 'partly' : 'clear';
+
+  
+  const last = Math.min(moment === 'evening' ? i0 + (24 - hr) + 23 : i0 + (23 - hr), H.time.length - 2);
+  const lowNight = Math.min(...H.temperature_2m.slice(i0, i0 + 16)), frostAhead = lowNight <= 0 && Math.min(...temps) > 0;
+  const day0 = H.temperature_2m.slice(i0 - hr, i0 - hr + 24), maxToday = Math.max(...day0), maxHour = day0.indexOf(maxToday);
+  
+  const t0 = i0 - hr + 24 + 7, tk = Array.from({ length: 15 }, (_, x) => K(t0 + x)), tl = LOUD.find(k => tk.filter(x => x === k).length >= (k === 'drizzle' ? 3 : 1)), tc = mean(H.cloud_cover, t0, 15);
+  const tomorrow = tl ? (tl === 'thunder' ? 'STORMS' : SNOW.has(tl) ? 'SNOW' : tl === 'drizzle' ? 'DRIZZLE' : 'RAIN') : tk.filter(x => x === 'fog').length >= 5 ? 'FOG' : tc > 80 ? 'CLOUD' : tc > 25 ? 'SOME SUN' : 'SUN';
+  let fact, turn = null;
+  if (falls(win[0]) || falls(win[1])){
+    const nm = NAME[loud]; let e = -1, e1 = -1;
+    for (let i = i0 + 1; i < Math.min(i0 + 18, H.time.length - 1); i++) if (!falls(K(i)) && !falls(K(i + 1))){ e = i; break; }
+    
+    if (['thunder', 'downpour', 'snowheavy'].includes(loud)) for (let i = i0 + 1; i < i0 + 8; i++) if (K(i) !== loud && K(i + 1) !== loud){ e1 = i; break; }
+    if (e1 > 0 && falls(K(e1))) fact = `${nm} until ${at(e1)}, then ${NAME[K(e1)].toLowerCase()}.`;
+    else if (e > 0 && e - i0 <= 12){ fact = `${nm} until ${at(e)}, then ${after(e) || 'dry'}.`; if (e - i0 <= 3 && hr < 20) turn = 'ending';    }
+    else fact = moment === 'morning' ? `${nm} all day.` : moment === 'afternoon' ? `${nm} into the night.` : `${nm} through the night.`;
+  } else {
+    let s = -1; for (let i = i0 + 2; i <= last; i++) if (falls(K(i))){ s = i; break; }
+    if (s > 0){
+      const k = K(s), sh = +H.time[s].slice(11, 13);
+      if (H.time[s].slice(0, 10) !== today){ fact = sh < 6 ? `${NAME[k]} overnight.` : `${NAME[k]} from ${at(s)} tomorrow.`; turn = SNOW.has(k) ? 'beforeSnow' : sh >= 12 ? 'tomorrowWetLate' : 'tomorrowWet'; }
+      else { fact = s - i0 >= 3 ? `Dry until ${at(s)}, then ${NAME[k].toLowerCase()}.` : `${NAME[k]} from ${at(s)}.`; turn = SNOW.has(k) ? 'beforeSnow' : 'beforeRain'; }
+    }
+    else if (key === 'wind'){
+      let e = -1; for (let i = i0 + 1; i <= last; i++) if ((H.wind_gusts_10m[i] || 0) <= 50){ e = i; break; }
+      const g = Math.round(Math.max(...gusts) / 5) * 5; fact = e > 0 ? `Gusts up to ${speed(g)} until ${at(e)}.` : `Gusts up to ${speed(g)}, no let-up.`;
+    }
+    else if (key === 'fog'){
+      let e = -1; for (let i = i0 + 1; i <= last; i++) if (K(i) !== 'fog'){ e = i; break; }
+      fact = e > 0 ? `Fog until ${at(e)}, then ${after(e) || 'cloud'}.` : moment === 'evening' ? 'Fog through the night.' : 'Fog all day.';
+    }
+    else if (moment === 'evening'){
+      const low = Math.min(...H.temperature_2m.slice(i0, i0 + (24 - hr) + 8));
+      if (low <= 0){ fact = `${mean(H.cloud_cover, i0, 8) < 50 ? 'Clear' : 'Dry'} tonight, down to ${deg(low)}.`; if (maxToday > 3) turn = 'frostTonight'; }
+      else { fact = `Tomorrow: ${tomorrow.toLowerCase()}, ${deg(D.temperature_2m_max[1])}.`; if (tomorrow.includes('SUN')) turn = 'tomorrowFine'; }
+    }
+    else if (key === 'heat' || (maxToday >= 30 && maxHour > hr)){ fact = maxHour > hr ? `${deg(maxToday)} by ${clock(String(maxHour).padStart(2, '0') + ':00')}.` : 'Hot until dark.'; turn = 'heat'; }
+    else if (key === 'frost'){
+      let e = -1; for (let i = i0 + 1; i <= last; i++) if (H.temperature_2m[i] > 0.5){ e = i; break; }
+      fact = e > 0 && H.is_day[e] ? `Frost until ${at(e)}, then ${after(e) || 'cloud'}.` : 'Below zero all day.';
+    }
+    else if (key === 'dawn'){ const cl = mean(H.cloud_cover, i0, Math.max(3, Math.round(toSet / 60))); fact = `Sun up at ${clock(D.sunrise[0].slice(11))}. ${cl < 25 ? 'Clear all day.' : cl < 80 ? 'Sun and cloud today.' : 'Cloud later.'}`; }
+    else if (key === 'sunset'){ fact = `Sun down at ${clock(D.sunset[0].slice(11))}.` + (frostAhead ? ' Frost by morning.' : ''); if (frostAhead) turn = 'frostTonight'; }
+    else if (night) fact = cloud > 70 ? 'Cloud overnight.' : `Clear night, down to ${deg(lowNight)}.`;
+    else {
+      
+      const sky = v => v > 80 ? 'grey' : v > 25 ? 'mixed' : 'sun', s0 = sky(cloud), iDark = i0 + Math.max(0, Math.floor(toSet / 60));
+      let ch = -1; for (let i = i0 + 2; i < iDark; i++){ const s1 = sky(mean(H.cloud_cover, i, 3)); if ((s0 === 'grey' && s1 === 'sun') || (s0 !== 'grey' && s1 === 'grey')){ ch = i; break; } }
+      const tail = moment === 'morning' ? 'all day' : 'until dark';
+      if (ch > 0){ fact = s0 === 'grey' ? `Grey until ${at(ch)}, then sun.` : `Sun until ${at(ch)}, then cloud.`; turn = s0 === 'grey' ? 'sunLater' : 'cloudLater'; }
+      else if (frostAhead && moment === 'afternoon'){ fact = `${key === 'clear' ? 'Clear' : 'Dry'} until dark. Frost by morning.`; turn = 'frostTonight'; }
+      else fact = key === 'haze' ? `Hazy and dry ${tail}.` : s0 === 'grey' ? `Grey ${tail}.` : s0 === 'mixed' ? `Sun and cloud ${tail}.` : `Clear ${tail}.`;
+    }
+  }
+
+  
+  const wd = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][now.getDay()];
+  const left = moment === 'evening' ? `TONIGHT   ${deg(Math.min(...H.temperature_2m.slice(i0, i0 + (24 - hr) + 8)))}` : `${wd}   ${deg(D.temperature_2m_max[0])} / ${deg(D.temperature_2m_min[0])}`;
+  const right = `TOMORROW   ${tomorrow}   ${deg(D.temperature_2m_max[1])}`;
+
+  if (!turn && night && key === 'overcast') turn = 'cloudNight';   
+  
+  const set = turn === 'heat' ? REMARKS.heat : (turn && EXTRA[turn]) || REMARKS[key];
+  const calm = !turn && ['clear', 'partly', 'overcast', 'haze'].includes(key), wk = calm ? EXTRA[wd.toLowerCase()] : null;
+  const seed = Math.floor((now - new Date(now.getFullYear(), 0, 1)) / 36e5);   
+  
+  const pic = Math.floor((seed - 5) / 24);
+  return { key, moment, hr, fact, turn, left, right, set, wk, seed, pic };
+}
+
+const remark = (st, n) => {
+  const fits = s => { const m = /\|(\d+)-(\d+)$/.exec(s); return !m || (st.hr >= +m[1] && st.hr < +m[2]); };
+  const pool = list => { const f = list.filter(fits); return f.length ? f : list; };
+  const i = st.seed + n, list = st.wk && i % 6 === 0 ? pool(st.wk) : pool(st.set), k = st.wk && i % 6 === 0 ? Math.floor(i / 6) : i;
+  return list[k % list.length].replace(/\|\d+-\d+$/, '');
+};
+function wwRing(px){ var s = [], a, r; for (r = 1; r <= 2; r++) for (a = 0; a < 12; a++) s.push((Math.cos(a * Math.PI / 6) * px * r / 2).toFixed(2) + 'px ' + (Math.sin(a * Math.PI / 6) * px * r / 2).toFixed(2) + 'px 0 #000'); return s.join(','); }
+/* the town for "lat,lon" from WW_TOWNS (towns.js): nearest within 60 km, weighted by size (distance over the fourth
+   root of the population, at least 1.5 km), so a point in Munich says Munich, one in Santa Monica says Santa Monica */
+function wwTown(ll){
+  if (!ll || typeof WW_TOWNS === 'undefined') return '';
+  var p = String(ll).split(','), la = parseFloat(p[0]), lo = parseFloat(p[1]); if (isNaN(la) || isNaN(lo)) return '';
+  var rows = WW_TOWNS.split('\n'), best = '', bs = 1e9, c = Math.cos(la * Math.PI / 180), i, r, dy, dx, d, s;
+  for (i = 0; i < rows.length; i++){
+    r = rows[i].split('|'); dy = (r[1] - la) * 111.2; if (dy > 60 || dy < -60) continue;
+    dx = (((r[2] - lo + 540) % 360) - 180) * 111.2 * c; d = Math.sqrt(dx * dx + dy * dy); if (d > 60) continue;
+    s = Math.max(d, 1.5) / Math.pow(+r[3], 0.25); if (s < bs){ bs = s; best = r[0]; }
+  }
+  return best;
+}
+function wwPaint(el){
+  var mode = el.getAttribute('data-ww'), w = el.clientWidth, h = el.clientHeight, probe = el.querySelector('.ww-probe');
+  var isX = window.WW_FORCE ? window.WW_FORCE === 'x' : !!probe && getComputedStyle(probe).display !== 'none';
+  var tall = h > w * 1.05, st = null, line2 = '';
+  try { WW_OPT.f = WW_SET.units === 'f'; WW_OPT.h12 = WW_SET.clock === '12'; st = story(WW_DATA); line2 = remark(st, 0); } catch (e) { st = null; }
+  if (!st) st = { key: 'overcast', fact: 'No forecast right now.', left: '', right: '', seed: 0, pic: 0 }, line2 = 'Look out of the real window.';
+  var list = STILLS[st.key], id = list[((st.pic % list.length) + list.length) % list.length];   /* one photograph per mood and day */
+  var img = document.createElement('img'); img.className = 'image image-dither'; img.alt = ''; img.style.objectFit = 'cover';
+  img.src = WW_BASE + (isX ? 'x' : 'og') + (tall ? '_portrait' : '') + '/' + id + '.png';
+  el.appendChild(img);
+  /* text sizes, readable from across the room: both lines 44 px and the corner notes 19.7 px on an 800 px wide
+     picture (on the X: 104 and 46 device px, about 11.5 and 5 mm), weight 600, a soft shade behind them */
+  var small = mode !== 'full', k = Math.min(w, h * 1.7) / 800 * (small ? 1.1 : 1);
+  var fs1 = Math.max(isX ? 22 : 24, 44.4 * k), fs3 = Math.max(isX ? 13 : 15, 19.7 * k);
+  var both = mode === 'full' || mode === 'half_horizontal';
+  var shade = function(edge, part, dark){ var d = document.createElement('div'); d.className = 'ww-shade'; d.style[edge] = '0'; d.style.height = part + '%'; d.style.background = 'linear-gradient(to ' + (edge === 'top' ? 'bottom' : 'top') + ',rgba(0,0,0,' + dark + '),rgba(0,0,0,' + (dark * 0.7).toFixed(2) + ') 45%,rgba(0,0,0,0))'; el.appendChild(d); };
+  shade('bottom', both ? 40 : 30, 0.86); shade('top', small ? 20 : 13, 0.7);
+  var sub = document.createElement('div'); sub.className = 'ww-sub text--center'; sub.style.bottom = (small ? 5 : 4.2) + '%'; sub.style.textShadow = wwRing(fs1 * (isX ? 0.10 : 0.13));
+  var a = document.createElement('span'); a.textContent = st.fact; sub.appendChild(a);
+  var lines = [a];
+  if (both){ var b = document.createElement('i'); b.textContent = line2; sub.appendChild(b); lines.push(b); }
+  el.appendChild(sub);
+  /* a long line shrinks until it fits; measured again once the webfont is there */
+  var fit = function(){ var room = sub.clientWidth, j, wd; for (j = 0; j < lines.length; j++){ lines[j].style.fontSize = fs1 + 'px'; wd = lines[j].scrollWidth; if (wd > room) lines[j].style.fontSize = Math.max(fs1 * 0.6, fs1 * room / wd * 0.99).toFixed(1) + 'px'; } };
+  fit();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  var note = function(text, side){ if (!text) return; var d = document.createElement('div'); d.className = 'ww-note'; d.style.fontSize = fs3 + 'px'; d.style.top = (2.9 * (w / h > 1 ? 1 : 0.7)) + '%'; d.style[side] = '3.2%'; d.style.textShadow = wwRing(fs3 * 0.16); d.textContent = text; el.appendChild(d); };
+  var place = WW_SET.place || wwTown(WW_SET.ll);
+  note((place ? place.toUpperCase() + '   ' : '') + st.left, 'left');
+  if (mode === 'full' && !tall) note(st.right, 'right');
+  if (mode === 'full' && tall && st.right){ var d2 = document.createElement('div'); d2.className = 'ww-note'; d2.style.fontSize = fs3 + 'px'; d2.style.top = '4.6%'; d2.style.left = '3.2%'; d2.style.textShadow = wwRing(fs3 * 0.16); d2.textContent = st.right; el.appendChild(d2); }
+}
+document.addEventListener('DOMContentLoaded', function(){ var all = document.querySelectorAll('.ww'), i; for (i = 0; i < all.length; i++) if (!all[i].getAttribute('data-done')){ all[i].setAttribute('data-done', '1'); wwPaint(all[i]); } });
+{% endraw %}
+</script>

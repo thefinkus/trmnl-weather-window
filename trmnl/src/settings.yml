@@ -1,6 +1,6 @@
 ---
 name: Weather Window
-description: Weather forecast as a film still
+description: Photo weather forecast with a vibe
 strategy: polling
 polling_verb: get
 polling_url: 'https://api.open-meteo.com/v1/forecast?latitude={{ trmnl.plugin_settings.custom_fields_values.latitude | default: "48.137" }}&longitude={{ trmnl.plugin_settings.custom_fields_values.longitude | default: "11.575" }}&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,precipitation,weather_code,cloud_cover,wind_gusts_10m,visibility,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&forecast_days=3&timezone=auto'
@@ -13,7 +13,7 @@ custom_fields:
     field_type: author_bio
     category: environment,art
     description: >-
-      The weather as a film still: one real photograph that fits the next few hours, and two subtitle lines. The first says what matters next ("Rain until 13:00, then sun."), the second is a small remark that fits it ("Put the kettle on."). Top left: your place, the day, high and low. Top right: tomorrow. No clock and no dashboard, so the screen is still true when you look at it an hour later.<br/>Setup: type the name you want to see, and the latitude and longitude of your place (right-click a spot in any map app to copy them). Choose Celsius or Fahrenheit and the clock style.<br/>Photographs: Unsplash, credits in the repository. Forecast: Open-Meteo. Type: Fraunces.<br/>Made by thefinkus
+      A view of the world outside your window, picked for the next few hours: a wet street at night, fog over a field, first light on the hills. Two lines underneath. The first says what is coming ("Dry until 12:00, then rain."), the second gives you something to do with it ("Put the kettle on."). Top left: your place, the day, high and low. Top right: tomorrow.<br/>It is there for the mood, and often it tells you what you need to know. The picture stays while the weather holds, so the screen is still right an hour later.<br/>Setup: type the name you want to see, and the latitude and longitude of your place (right-click a spot in any map app to copy them). Choose Celsius or Fahrenheit and the clock style.<br/>Photographs: Unsplash, credits in the repository. Forecast: Open-Meteo. Type: Fraunces.<br/>Made by thefinkus
     github_url: https://github.com/thefinkus/trmnl-weather-window
     learn_more_url: https://open-meteo.com
   - keyname: place

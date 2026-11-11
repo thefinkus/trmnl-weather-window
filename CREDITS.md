@@ -85,3 +85,8 @@ All pictures are photographs from [Unsplash](https://unsplash.com), used under t
 | rainnight | [@misoto22](https://unsplash.com/@misoto22) | [photo-1722252556945-6afb04bac3e2](https://images.unsplash.com/photo-1722252556945-6afb04bac3e2?w=1200) |
 | rainnight | [@ingvar_erik](https://unsplash.com/@ingvar_erik) | [photo-1554103577-c0d26e9b90e0](https://images.unsplash.com/photo-1554103577-c0d26e9b90e0?w=1200) |
 | rainnight | [@olalandro](https://unsplash.com/@olalandro) | [photo-1611482909130-a0d1cbc268af](https://images.unsplash.com/photo-1611482909130-a0d1cbc268af?w=1200) |
+
+# Town names
+
+`towns.js` is built from [GeoNames](https://www.geonames.org) (cities15000), licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Shortened to name, rounded coordinates and population.

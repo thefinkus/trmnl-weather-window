@@ -3,7 +3,10 @@ name: Weather Window
 description: Photo weather forecast with a vibe
 strategy: polling
 polling_verb: get
-polling_url: 'https://api.open-meteo.com/v1/forecast?latitude={{ trmnl.plugin_settings.custom_fields_values.lat_lon | default: "48.137,11.575" | split: "," | first | strip }}&longitude={{ trmnl.plugin_settings.custom_fields_values.lat_lon | default: "48.137,11.575" | split: "," | last | strip }}&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,precipitation,weather_code,cloud_cover,wind_gusts_10m,visibility,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&forecast_days=3&timezone=auto'
+polling_headers: 'User-Agent: WeatherWindow/1.0 (TRMNL plugin; github.com/thefinkus/trmnl-weather-window)'
+polling_url: |-
+  https://api.open-meteo.com/v1/forecast?latitude={{ trmnl.plugin_settings.custom_fields_values.lat_lon | default: "48.137,11.575" | split: "," | first | strip }}&longitude={{ trmnl.plugin_settings.custom_fields_values.lat_lon | default: "48.137,11.575" | split: "," | last | strip }}&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,precipitation,weather_code,cloud_cover,wind_gusts_10m,visibility,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&forecast_days=3&timezone=auto
+  https://photon.komoot.io/reverse?lat={{ trmnl.plugin_settings.custom_fields_values.lat_lon | default: "48.137,11.575" | split: "," | first | strip }}&lon={{ trmnl.plugin_settings.custom_fields_values.lat_lon | default: "48.137,11.575" | split: "," | last | strip }}&lang=en&limit=1
 refresh_interval: 60
 dark_mode: 'no'
 no_screen_padding: 'yes'
@@ -13,19 +16,20 @@ custom_fields:
     field_type: author_bio
     category: environment,art
     description: >-
-      A view of the world outside your window, picked for the next few hours: a wet street at night, fog over a field, first light on the hills. Two lines underneath. The first says what is coming ("Dry until 12:00, then rain."), the second gives you something to do with it ("Put the kettle on."). Top left: your place, the day, high and low. Top right: tomorrow.<br/>It is there for the mood, and often it tells you what you need to know. The picture stays while the weather holds, so the screen is still right an hour later.<br/>Setup: search for your city, address or postcode and pick it from the list. Add the name you want to see in the corner, then choose Celsius or Fahrenheit and the clock style.<br/>Photographs: Unsplash, credits in the repository. Forecast: Open-Meteo. Type: Fraunces.<br/>Made by thefinkus
+      A view of the world outside your window, picked for the next few hours: a wet street at night, fog over a field, first light on the hills. Two lines underneath. The first says what is coming ("Dry until 12:00, then rain."), the second gives you something to do with it ("Put the kettle on."). Top left: your place, the day, high and low. Top right: tomorrow.<br/>It is there for the mood, and often it tells you what you need to know. The picture stays while the weather holds, so the screen is still right an hour later.<br/>Setup: search for your city, address or postcode and pick it from the list. The corner shows your town; type a place name to show something else. Choose Celsius or Fahrenheit and the clock style.<br/>Photographs: Unsplash, credits in the repository. Forecast: Open-Meteo. Type: Fraunces.<br/>Made by thefinkus
     github_url: https://github.com/thefinkus/trmnl-weather-window
     learn_more_url: https://open-meteo.com
   - keyname: lat_lon
     name: Location
     field_type: lat_lon
-    description: Search for a city, address or postcode and pick it from the list. Coordinates work too, for example 48.137,11.575.
+    placeholder: Search your city
+    description: Search for a city, address or postcode and pick it from the list. TRMNL keeps only the coordinates, so they show here after saving.
   - keyname: place
     name: Place name
     field_type: string
     optional: true
-    placeholder: Munich
-    description: Shown in the top left corner. Any name you like, or leave it empty.
+    placeholder: Your town
+    description: Leave it empty to show the town of your location in the top left corner, or type any name you like.
   - keyname: units
     name: Units
     field_type: select

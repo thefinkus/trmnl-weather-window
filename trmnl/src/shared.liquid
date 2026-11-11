@@ -74,7 +74,7 @@ var REMARKS = {
     'Cap weather.',
     'Good for the garden.',
     'Walk anyway. It is only mist.',
-    'Wipe the bike seat first.',
+    'Wipe the bike seat first.|6-22',
     'Jacket yes, umbrella no.',
     'The dog will not mind.',
     'Shoes will survive this one.',
@@ -116,7 +116,7 @@ var REMARKS = {
     'Rainbow chances: fair.',
     'Check the sky before you go.',
     'Run between the drops.',
-    'Laundry in. Laundry out.',
+    'Laundry in. Laundry out.|7-20',
     'Keep a hood handy.',
     'Sit under the awning.',
     'A doorway will do for now.',
@@ -129,8 +129,8 @@ var REMARKS = {
     'Watch it from inside.',
     'Shut the skylight.',
     'The cat already knows.',
-    'Bring the laundry in.',
-    'Swimming can wait.',
+    'Bring the laundry in.|7-21',
+    'Swimming can wait.|8-21',
     'No day for the hilltop.',
     'Lights low, curtains open.',
     'A good show from the sofa.',
@@ -145,7 +145,7 @@ var REMARKS = {
     'Skip the umbrella. It will lose.',
     'Doors will slam.',
     'Good day for a kite.|5-17',
-    'Bring the washing in.',
+    'Bring the washing in.|7-21',
     'Scarf tucked in.',
     'Close the balcony door.',
   ],
@@ -293,19 +293,19 @@ var REMARKS = {
 var EXTRA = {
   
   beforeRain: [
-    'Get the walk in early.',
+    'Get the walk in early.|5-16',
     'Take the umbrella for later.',
-    'Bring the laundry in by then.',
+    'Bring the laundry in by then.|7-20',
     'Enjoy the dry part.',
-    'Errands first.',
+    'Errands first.|6-18',
     'The good hours come first.',
-    'Bike there, bus back.',
+    'Bike there, bus back.|6-19',
     'It will not last. Use it.',
   ],
   
   beforeSnow: [
     'Find the gloves now.',
-    'Shop before it starts.',
+    'Shop before it starts.|7-20',
     'Park somewhere flat.',
     'Bring the shovel up.',
     'The quiet starts later.',
@@ -321,7 +321,7 @@ var EXTRA = {
     'Give it an hour.',
     'Shoes by the door. Almost time.',
     'Find your shoes.',
-    'Hold the walk a little.',
+    'Hold the walk a little.|6-20',
   ],
   
   cloudLater: [
@@ -411,8 +411,10 @@ function story(j){
   const moment = hr >= 18 ? 'evening' : hr >= 11 ? 'afternoon' : 'morning';
   const mean = (a, i, n) => { let s = 0, m = 0; for (let x = i; x < i + n && x < a.length; x++){ s += a[x] || 0; m++; } return m ? s / m : 0; };
   const win = [i0, i0 + 1, i0 + 2].map(K), cloud = mean(H.cloud_cover, i0, 3), temps = H.temperature_2m.slice(i0, i0 + 3);
-  const night = !H.is_day[Math.min(i0 + 1, H.is_day.length - 1)];
   const now = new Date(c.time), sinceRise = (now - new Date(D.sunrise[0])) / 6e4, toSet = (new Date(D.sunset[0]) - now) / 6e4;
+  
+  const sunOk = D.sunrise[0].slice(0, 10) === today && D.sunset[0].slice(0, 10) === today && sinceRise + toSet > 60;
+  const night = sunOk ? (sinceRise + 30 < 0 || toSet - 30 <= 0) : !H.is_day[Math.min(i0 + 1, H.is_day.length - 1)];
   const gusts = H.wind_gusts_10m.slice(i0, i0 + 6).map(v => v || 0), gustNow = Math.max(...gusts.slice(0, 3));
   const after = e => mean(H.cloud_cover, e, 3) < 45 ? (H.is_day[e] ? 'sun' : 'clear') : null;
 

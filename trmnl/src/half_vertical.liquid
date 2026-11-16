@@ -307,6 +307,24 @@ var EXTRA = {
     'It will not last. Use it.',
   ],
   
+  maybeRain: [
+    'Umbrella in the bag, just in case.',
+    'Take a jacket with a hood.',
+    'Could stay dry. Pack for both.',
+    'Laundry inside, to be safe.|7-20',
+    'Sit outside, near the door.|8-21',
+    'Keep the bike, pack a jacket.|6-20',
+    'Go anyway. Take a hood.',
+    'Shoes that can take a puddle.',
+  ],
+  
+  maybeSnow: [
+    'Gloves in the pocket, to be safe.',
+    'Watch for the first flakes.',
+    'A hat will not hurt.',
+    'Take the warm coat.',
+  ],
+  
   beforeSnow: [
     'Find the gloves now.',
     'Shop before it starts.|7-20',
@@ -391,8 +409,18 @@ const WET = new Set(['thunder', 'downpour', 'showers', 'drizzle', 'rain']), SNOW
 const falls = k => WET.has(k) || SNOW.has(k);
 const LOUD = ['thunder', 'snowheavy', 'downpour', 'rain', 'snowlight', 'showers', 'drizzle'];   
 const NAME = { thunder: 'Thunderstorms', downpour: 'Heavy rain', showers: 'Showers', drizzle: 'Drizzle', rain: 'Rain', snowlight: 'Snow', snowheavy: 'Heavy snow' };
-function kindAt(H, i){
-  const w = H.weather_code[i]; if (w == null) return 'dry';
+
+const SURE_MM = 0.3, SURE_PROB = 50, MAYBE_MM = 0.1, MAYBE_PROB = 50, BLIND_MM = 0.5;
+const wetCode = w => w != null && ((w >= 51 && w <= 67) || (w >= 71 && w <= 77) || (w >= 80 && w <= 86) || w >= 95);
+function tierAt(H, i){
+  const j = i + 1, mm = H.precipitation ? H.precipitation[j] : null, p = H.precipitation_probability ? H.precipitation_probability[j] : null;
+  if (mm == null) return wetCode(H.weather_code[j]) ? 2 : 0;           
+  if (p == null) return mm >= BLIND_MM ? 2 : mm >= MAYBE_MM ? 1 : 0;   
+  return mm >= SURE_MM && p >= SURE_PROB ? 2 : (mm >= MAYBE_MM || p >= MAYBE_PROB) ? 1 : 0;
+}
+
+function wetKind(H, i){
+  const j = i + 1, w = H.weather_code[j];
   if (w >= 95) return 'thunder';
   if (w === 75 || w === 86) return 'snowheavy';
   if ((w >= 71 && w <= 77) || w === 85) return 'snowlight';
@@ -400,8 +428,12 @@ function kindAt(H, i){
   if (w === 80 || w === 81) return 'showers';
   if (w >= 61 && w <= 66) return 'rain';
   if (w >= 51 && w <= 57) return 'drizzle';
-  if (w === 45 || w === 48) return 'fog';
-  return 'dry';
+  return H.temperature_2m[j] != null && H.temperature_2m[j] <= 0 ? 'snowlight' : 'rain';   
+}
+function kindAt(H, i){
+  if (tierAt(H, i) === 2) return wetKind(H, i);
+  const w = H.weather_code[i];
+  return w === 45 || w === 48 ? 'fog' : 'dry';
 }
 
 var WW_OPT = { f: false, h12: false };
@@ -411,7 +443,7 @@ const clock = t => { if (!WW_OPT.h12) return t; const h = +t.slice(0, 2), m = t.
 
 function story(j){
   const c = j.current, H = j.hourly, D = j.daily, hr = +c.time.slice(11, 13), today = c.time.slice(0, 10);
-  const i0 = Math.max(0, H.time.indexOf(c.time.slice(0, 13) + ':00')), K = i => kindAt(H, i), at = i => clock(H.time[i].slice(11, 16));
+  const i0 = Math.max(0, H.time.indexOf(c.time.slice(0, 13) + ':00')), K = i => kindAt(H, i), M = i => tierAt(H, i) === 1, at = i => clock(H.time[i].slice(11, 16));
   const moment = hr >= 18 ? 'evening' : hr >= 11 ? 'afternoon' : 'morning';
   const mean = (a, i, n) => { let s = 0, m = 0; for (let x = i; x < i + n && x < a.length; x++){ s += a[x] || 0; m++; } return m ? s / m : 0; };
   const win = [i0, i0 + 1, i0 + 2].map(K), cloud = mean(H.cloud_cover, i0, 3), temps = H.temperature_2m.slice(i0, i0 + 3);
@@ -441,8 +473,12 @@ function story(j){
   const lowNight = Math.min(...H.temperature_2m.slice(i0, i0 + 16)), frostAhead = lowNight <= 0 && Math.min(...temps) > 0;
   const day0 = H.temperature_2m.slice(i0 - hr, i0 - hr + 24), maxToday = Math.max(...day0), maxHour = day0.indexOf(maxToday);
   
-  const t0 = i0 - hr + 24 + 7, tk = Array.from({ length: 15 }, (_, x) => K(t0 + x)), tl = LOUD.find(k => tk.filter(x => x === k).length >= (k === 'drizzle' ? 3 : 1)), tc = mean(H.cloud_cover, t0, 15);
-  const tomorrow = tl ? (tl === 'thunder' ? 'STORMS' : SNOW.has(tl) ? 'SNOW' : tl === 'drizzle' ? 'DRIZZLE' : 'RAIN') : tk.filter(x => x === 'fog').length >= 5 ? 'FOG' : tc > 80 ? 'CLOUD' : tc > 25 ? 'SOME SUN' : 'SUN';
+  const t0 = i0 - hr + 24 + 7, tk = Array.from({ length: 15 }, (_, x) => K(t0 + x)), tc = mean(H.cloud_cover, t0, 15);
+  
+  const tw = tk.filter(falls), tl = LOUD.find(k => tw.includes(k)), tm = Array.from({ length: 15 }, (_, x) => t0 + x).filter(M).map(i => wetKind(H, i));
+  const tomorrow = tl && (tl === 'thunder' || tw.length >= (tl === 'drizzle' ? 3 : 2)) ? (tl === 'thunder' ? 'STORMS' : SNOW.has(tl) ? 'SNOW' : tl === 'drizzle' ? 'DRIZZLE' : 'RAIN')
+    : tw.length || tm.length >= 3 ? (SNOW.has(tl || tm[0]) ? 'MAYBE SNOW' : 'MAYBE RAIN')
+    : tk.filter(x => x === 'fog').length >= 5 ? 'FOG' : tc > 80 ? 'CLOUD' : tc > 25 ? 'SOME SUN' : 'SUN';
   let fact, turn = null;
   if (falls(win[0]) || falls(win[1])){
     const nm = NAME[loud]; let e = -1, e1 = -1;
@@ -450,14 +486,16 @@ function story(j){
     
     if (['thunder', 'downpour', 'snowheavy'].includes(loud)) for (let i = i0 + 1; i < i0 + 8; i++) if (K(i) !== loud && K(i + 1) !== loud){ e1 = i; break; }
     if (e1 > 0 && falls(K(e1))) fact = `${nm} until ${at(e1)}, then ${NAME[K(e1)].toLowerCase()}.`;
-    else if (e > 0 && e - i0 <= 12){ fact = `${nm} until ${at(e)}, then ${after(e) || 'dry'}.`; if (e - i0 <= 3 && hr < 20) turn = 'ending';    }
+    else if (e > 0 && e - i0 <= 12){ fact = `${nm} until ${at(e)}, then ${M(e) || M(e + 1) || M(e + 2) ? 'mostly dry' : after(e) || 'dry'}.`; if (e - i0 <= 3 && hr < 20) turn = 'ending';    }
     else fact = moment === 'morning' ? `${nm} all day.` : moment === 'afternoon' ? `${nm} into the night.` : `${nm} through the night.`;
   } else {
     let s = -1; for (let i = i0 + 2; i <= last; i++) if (falls(K(i))){ s = i; break; }
+    
+    const lim = s > 0 ? s : Math.min(last, i0 + 6); let m = -1; for (let i = i0; i < lim; i++) if (M(i)){ m = i; break; }
     if (s > 0){
       const k = K(s), sh = +H.time[s].slice(11, 13);
       if (H.time[s].slice(0, 10) !== today){ fact = sh < 6 ? `${NAME[k]} overnight.` : `${NAME[k]} from ${at(s)} tomorrow.`; turn = SNOW.has(k) ? 'beforeSnow' : sh >= 12 ? 'tomorrowWetLate' : 'tomorrowWet'; }
-      else { fact = s - i0 >= 3 ? `Dry until ${at(s)}, then ${NAME[k].toLowerCase()}.` : `${NAME[k]} from ${at(s)}.`; turn = SNOW.has(k) ? 'beforeSnow' : 'beforeRain'; }
+      else { fact = s - i0 >= 3 && m < 0 ? `Dry until ${at(s)}, then ${NAME[k].toLowerCase()}.` : `${NAME[k]} from ${at(s)}.`; turn = SNOW.has(k) ? 'beforeSnow' : 'beforeRain'; }
     }
     else if (key === 'wind'){
       let e = -1; for (let i = i0 + 1; i <= last; i++) if ((H.wind_gusts_10m[i] || 0) <= 50){ e = i; break; }
@@ -466,6 +504,17 @@ function story(j){
     else if (key === 'fog'){
       let e = -1; for (let i = i0 + 1; i <= last; i++) if (K(i) !== 'fog'){ e = i; break; }
       fact = e > 0 ? `Fog until ${at(e)}, then ${after(e) || 'cloud'}.` : moment === 'evening' ? 'Fog through the night.' : 'Fog all day.';
+    }
+    else if (m >= 0 && (H.time[m].slice(0, 10) === today || +H.time[m].slice(11, 13) < 6)){
+      
+      const pk = wetKind(H, m), pn = pk === 'thunder' ? 'Thunderstorms' : SNOW.has(pk) ? 'Snow' : pk === 'drizzle' ? 'Drizzle' : 'Showers';
+      if (H.time[m].slice(0, 10) !== today) fact = `${pn} possible overnight.`;
+      else if (m - i0 <= 1){
+        let e = -1; for (let i = m + 1; i < lim; i++) if (!M(i) && !M(i + 1)){ e = i; break; }
+        fact = e > 0 ? `${pn} possible until ${at(e)}.` : `${pn} possible ${moment === 'morning' ? 'all day' : moment === 'afternoon' ? 'into the night' : 'tonight'}.`;
+      }
+      else fact = `${pn} possible from ${at(m)}.`;
+      turn = SNOW.has(pk) ? 'maybeSnow' : 'maybeRain';
     }
     else if (moment === 'evening'){
       const low = Math.min(...H.temperature_2m.slice(i0, i0 + (24 - hr) + 8));
